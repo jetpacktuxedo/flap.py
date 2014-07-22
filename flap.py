@@ -2,7 +2,34 @@
 
 import curses, curses.textpad, time, sys
 
-maxX, maxY, height, oldheight, quit, rate, pipePos= 0, 0, 0, 0, 1, 0.04, 0
+maxX, maxY, height, oldheight, quit, rate = 0, 0, 0, 0, 1, 0.04
+
+class Pipe(object):
+  height = 0
+  dist = 0
+  thickness = 10
+
+  def __init__(self, height, dist, thickness):
+    self.height = height
+    self.dist = dist
+    self.thickness = thickness
+
+  def advance(self):
+    if (self.dist <= 0.5 and self.thickness > 1): 
+      self.thickness = self.thickness - 0.25
+      self.dist = self.dist + 0.25
+    elif (self.dist <= 0.5 and self.thickness <= 1):
+      self.thickness = 0
+      self.dist = 0
+    else: self.dist = self.dist - 0.25
+
+  def draw(self, screen):
+    if (self.thickness == 0): return
+    bottomPipe = curses.newwin(maxY - self.height, int(round(self.thickness)), 
+            self.height, int(round(self.dist)))
+    bottomPipe.bkgd(curses.color_pair(2))
+    screen.refresh()
+    bottomPipe.refresh()
 
 def resetVars(screen):
   global maxX, maxY, quit, pipePos
@@ -42,28 +69,17 @@ def gravity():
   global rate
   rate = rate * 1.005
 
-def movePipes():
-  global pipePos
-  pipePos = pipePos - 0.25
-  if (pipePos < 0): pipePos = pipePos + maxX - 10
-
 def drawBird(screen, y):
-  screen.addstr(y-1, 2, " ___")
-  screen.addstr(y+0, 2, "/__O\_")
+  screen.addstr(y-1, 2, " ___   ")
+  screen.addstr(y+0, 2, "/__O\_ ")
   screen.addstr(y+1, 2, "\___/-'")
 
-def drawPipes(screen, y, x):
-  bottomPipe = curses.newwin(maxY - y, 10, y, x)
-  bottomPipe.bkgd(curses.color_pair(2))
-  screen.refresh()
-  bottomPipe.refresh()
-
-def refreshScreen(screen):
+def refreshScreen(screen, pipe):
   if (abs(oldheight - height) >= 1):
     screen.clear()
     screen.box()
     drawBird(screen, int(round(height)))
-    drawPipes(screen, 15, int(round(pipePos)))
+    pipe.draw(screen)
     screen.refresh()
 
 def flapFall(screen, key):
@@ -97,12 +113,13 @@ def main(screen):
   initScreen(screen)
   resetVars(screen)
   c = 0
+  pipe = Pipe(15, maxX - 10, 10)
 
   while (c != 113):
     time.sleep(1/60.0)
-    refreshScreen(screen)
+    pipe.advance()
+    refreshScreen(screen, pipe)
     flapFall(screen, c)
-    movePipes()
     c = screen.getch()
     
 try:
