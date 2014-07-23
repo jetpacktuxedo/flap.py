@@ -15,9 +15,9 @@ class Pipe(object):
     self.thickness = thickness
 
   def advance(self):
-    if (self.dist <= 0.5 and self.thickness > 1): 
+    if (self.dist <= 0.25 and self.thickness > 1): 
       self.thickness = self.thickness - 0.25
-      self.dist = self.dist + 0.25
+      self.dist = 0.25
     elif (self.dist <= 0.5 and self.thickness <= 1):
       self.thickness = 0
       self.dist = 0
@@ -30,6 +30,15 @@ class Pipe(object):
     bottomPipe.bkgd(curses.color_pair(2))
     screen.refresh()
     bottomPipe.refresh()
+
+  def wholePos(self):
+    if (self.dist % 1.0 == 0): return True
+    else: return False
+
+def checkPipesForWhole(pipeList):
+  for i in pipeList:
+    if i.wholePos(): return True
+  return False
 
 def resetVars(screen):
   global maxX, maxY, quit, pipePos
@@ -74,12 +83,12 @@ def drawBird(screen, y):
   screen.addstr(y+0, 2, "/__O\_ ")
   screen.addstr(y+1, 2, "\___/-'")
 
-def refreshScreen(screen, pipe):
-  if (abs(oldheight - height) >= 1):
+def refreshScreen(screen, pipeList):
+  if (abs(oldheight - height) >= 1 or checkPipesForWhole(pipeList)):
     screen.clear()
     screen.box()
     drawBird(screen, int(round(height)))
-    pipe.draw(screen)
+    for i in pipeList: i.draw(screen)
     screen.refresh()
 
 def flapFall(screen, key):
@@ -113,12 +122,14 @@ def main(screen):
   initScreen(screen)
   resetVars(screen)
   c = 0
-  pipe = Pipe(15, maxX - 10, 10)
+  pipeList = []
+  pipeList.append(Pipe(15, maxX - 10, 10))
+  pipeList.append(Pipe(10, maxX - 25, 10))
 
   while (c != 113):
     time.sleep(1/60.0)
-    pipe.advance()
-    refreshScreen(screen, pipe)
+    for i in pipeList: i.advance()
+    refreshScreen(screen, pipeList)
     flapFall(screen, c)
     c = screen.getch()
     
