@@ -51,6 +51,13 @@ class Bird(object):
     if (abs(self.oldheight - self.height) >= 1): return True
     else: return False
 
+  def getMinMax(self):
+    minX = self.xPos
+    maxX = self.xPos + 7
+    minY = self.height
+    maxY = self.height + 2
+    return [minX, maxX, minY, maxY]
+
 class Pipe(object):
   height = 0
   dist = 0
@@ -82,13 +89,14 @@ class Pipe(object):
     if (self.dist % 1.0 == 0): return True
     else: return False
 
-  def collision(self, birdMinX, birdMaxX, birdMinY, birdMaxY):
-    pipeMinX = dist
-    pipeMaxX = dist + thickness
-    pipeMinY = height
-    pipeMaxY = maxY - height
-    for x in range(birdMinX, birdMaxX):
-      for y in range(birdMinY, birdMaxY):
+  def collision(self, dimensionList):
+    global maxY
+    pipeMinX = self.dist
+    pipeMaxX = self.dist + self.thickness
+    pipeMinY = self.height
+    pipeMaxY = maxY - self.height
+    for x in range(dimensionList[0], dimensionList[1]):
+      for y in range(dimensionList[2], dimensionList[3]):
         if (x in range(pipeMinX, pipeMaxX) and y in range(pipeMinY, pipeMaxY)):
           return True
     return False
@@ -98,9 +106,9 @@ def checkPipesForWhole(pipeList):
     if i.wholePos(): return True
   return False
 
-def checkCollisions(pipeList, birdMinX, birdMaxX, birdMinY, birdMaxY):
+def checkCollisions(pipeList, dimensionList):
   for i in pipeList:
-    if i.collision(birdMinX, birdMaxX, birdMinY, birdMaxY): return True
+    if i.collision(dimensionList): return True
   return False
 
 def resetVars(screen, bird):
@@ -125,6 +133,7 @@ def refreshScreen(screen, bird, pipeList):
     screen.box()
     bird.draw()
     for i in pipeList: i.draw(screen)
+    if (checkCollisions(pipeList, bird.getMinMax())): lose()
     screen.refresh()
 
 def lose():
@@ -141,6 +150,10 @@ def lose():
   if (key == 89 or key == 121): return 0
   elif (key == 78 or key == 110 or key == 113): sys.exit(0)
   else: return 1
+
+def buildPipes(pipeList):
+  print shit
+
 
 def main(screen):
   global quit
